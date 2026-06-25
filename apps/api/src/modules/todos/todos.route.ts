@@ -4,9 +4,8 @@ import {
   TodoResponseSchema,
   UpdateTodoRequestSchema,
 } from '@todo-app/contracts/todos';
-import type { TodosService } from '@todo-app/api/src/modules/todos/todos.service.js';
-import type { TodoServiceError } from '@todo-app/api/src/modules/todos/todos.errors.js';
-// import { assertUnreachable } from '@todo-app/api/src/lib/results.js';
+import type { TodosService } from './todos.service.js';
+import type { TodoServiceError } from './todos.errors.js';
 // use validation from the contract to validate the data for all routes
 
 function mapTodoError(error: TodoServiceError, id?: string) {

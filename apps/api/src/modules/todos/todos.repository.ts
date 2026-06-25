@@ -2,8 +2,8 @@ import { eq } from 'drizzle-orm';
 import { fromPromise, ok, err } from 'neverthrow';
 import { z } from 'zod';
 import { TodoStatusSchema } from '@todo-app/contracts/todos';
-import type { Db } from '@todo-app/api/src/db/index.js';
-import { todos } from '@todo-app/api/src/db/schema.js';
+import type { Db } from '../../db/index.js';
+import { todos } from '../../db/schema.js';
 
 const DbTodoSchema = z.object({
   id: z.string(),

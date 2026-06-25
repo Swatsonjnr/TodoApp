@@ -1,7 +1,7 @@
 import type { ResultAsync } from 'neverthrow';
 import type { CreateTodoRequest, UpdateTodoRequest, TodoResponse } from '@todo-app/contracts/todos';
-import type { TodosRepository } from '@todo-app/api/src/modules/todos/todos.repository.js';
-import type { TodoServiceError } from '@todo-app/api/src/modules/todos/todos.errors.js';
+import type { TodosRepository } from './todos.repository.js';
+import type { TodoServiceError } from './todos.errors.js';
 
 export class TodosService {
   constructor(private readonly repository: TodosRepository) {}

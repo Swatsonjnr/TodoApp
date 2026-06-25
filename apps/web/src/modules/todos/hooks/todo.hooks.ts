@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CreateTodoRequest, UpdateTodoRequest, TodoResponse } from '@todo-app/contracts';
-import { todosApi } from '@todo-app/web/src/modules/todos/todos.api.js';
+import { todosApi } from '../todos.api';
 
 export const todoKeys = {
   all: ['todos'] as const,
@@ -15,7 +15,11 @@ type TodosStatus =
 export function useTodos() {
   return useQuery({
     queryKey: todoKeys.all,
-    queryFn: () => todosApi.getAll(),
+    queryFn: () =>
+      todosApi.getAll().match(
+        (data) => data,
+        (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
+      ),
   });
 }
 
@@ -43,7 +47,11 @@ export function useTodosStatus(): TodosStatus {
 export function useCreateTodo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateTodoRequest) => todosApi.create(data),
+    mutationFn: (data: CreateTodoRequest) =>
+      todosApi.create(data).match(
+        (todo) => todo,
+        (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: todoKeys.all });
     },
@@ -54,7 +62,10 @@ export function useUpdateTodo() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTodoRequest }) =>
-      todosApi.update(id, data),
+      todosApi.update(id, data).match(
+        (todo) => todo,
+        (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: todoKeys.all });
     },
@@ -64,7 +75,11 @@ export function useUpdateTodo() {
 export function useDeleteTodo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => todosApi.delete(id),
+    mutationFn: (id: string) =>
+      todosApi.delete(id).match(
+        () => undefined,
+        (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: todoKeys.all });
     },

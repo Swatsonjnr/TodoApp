@@ -3,6 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement } from 'react';
 import type { ReactNode } from 'react';
+import { ok, err } from 'neverthrow';
 import * as todosApiModule from '../todos.api';
 import { useTodosStatus } from './todo.hooks';
 
@@ -31,7 +32,9 @@ beforeEach(() => {
 
 describe('useTodosStatus', () => {
   it('returns loading status while fetching', () => {
-    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(
+      new Promise(() => {}) as never,
+    );
 
     const { result } = renderHook(() => useTodosStatus(), {
       wrapper: makeWrapper(),
@@ -41,10 +44,9 @@ describe('useTodosStatus', () => {
   });
 
   it('returns success status with todos when fetch succeeds', async () => {
-    vi.spyOn(todosApiModule.todosApi, 'getAll').mockResolvedValue({
-      todos: [mockTodo],
-      total: 1,
-    });
+    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(
+      ok({ todos: [mockTodo], total: 1 }) as never,
+    );
 
     const { result } = renderHook(() => useTodosStatus(), {
       wrapper: makeWrapper(),
@@ -59,8 +61,8 @@ describe('useTodosStatus', () => {
   });
 
   it('returns error status with message when fetch fails', async () => {
-    vi.spyOn(todosApiModule.todosApi, 'getAll').mockRejectedValue(
-      new Error('Service unavailable'),
+    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(
+      err({ type: 'network_error', message: 'Service unavailable' }) as never,
     );
 
     const { result } = renderHook(() => useTodosStatus(), {

@@ -14,8 +14,12 @@ function useFlow(): FlowState {
   if (todosStatus.status === 'loading') {return { status: 'loading' }};
   if (todosStatus.status === 'error') {return { status: 'error', message: todosStatus.message }};
 
+  // filtering should come from the backend for authenticity rather than having it being done on the frontend
+  // have all 
   const pending = todosStatus.todos.filter((t) => t.status === 'pending');
   const completed = todosStatus.todos.filter((t) => t.status === 'completed');
+
+
   return { status: 'success', pending, completed, isEmpty: todosStatus.todos.length === 0 };
 }
 
@@ -32,6 +36,7 @@ export function TodosFlow() {
     createTodo.mutate(data);
   }
 
+  // toggling should come from the backend for authenticity rather than having it being done on the frontend
   function handleToggle(id: string) {
     const todo =
       flow.status === 'success'

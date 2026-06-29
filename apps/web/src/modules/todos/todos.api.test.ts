@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { todosApi } from '../todos.api';
+import { todosApi } from './todos.api';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -26,28 +26,48 @@ describe('todosApi.getAll', () => {
 
     const result = await todosApi.getAll();
 
-    expect(result.todos).toHaveLength(1);
-    expect(result.todos[0].title).toBe('Test todo');
-    expect(result.total).toBe(1);
+    result.match(
+      (data) => {
+        expect(data.todos).toHaveLength(1);
+        expect(data.todos[0].title).toBe('Test todo');
+        expect(data.total).toBe(1);
+      },
+      () => { throw new Error('Expected success'); },
+    );
   });
 
-  it('throws with message when server returns error', async () => {
+  it('returns network_error when server returns error', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 503,
       json: async () => ({ error: 'Service unavailable' }),
     });
 
-    await expect(todosApi.getAll()).rejects.toThrow('Service unavailable');
+    const result = await todosApi.getAll();
+
+    result.match(
+      () => { throw new Error('Expected error'); },
+      (error) => {
+        expect(error.type).toBe('network_error');
+        if (error.type === 'network_error') {
+          expect(error.message).toBe('Service unavailable');
+        }
+      },
+    );
   });
 
-  it('throws when response shape does not match schema', async () => {
+  it('returns invalid_response when response shape does not match schema', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ unexpected: 'shape' }),
     });
 
-    await expect(todosApi.getAll()).rejects.toThrow();
+    const result = await todosApi.getAll();
+
+    result.match(
+      () => { throw new Error('Expected error'); },
+      (error) => { expect(error.type).toBe('invalid_response'); },
+    );
   });
 });
 
@@ -60,34 +80,51 @@ describe('todosApi.create', () => {
 
     const result = await todosApi.create({ title: 'Test todo' });
 
-    expect(result.id).toBe('1');
-    expect(result.title).toBe('Test todo');
+    result.match(
+      (todo) => {
+        expect(todo.id).toBe('1');
+        expect(todo.title).toBe('Test todo');
+      },
+      () => { throw new Error('Expected success'); },
+    );
   });
 
-  it('throws when response shape is invalid', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ id: '1' }),
-    });
+  it('returns validation_error when request is invalid', async () => {
+    const result = await todosApi.create({ title: '' });
 
-    await expect(todosApi.create({ title: 'Test' })).rejects.toThrow();
+    result.match(
+      () => { throw new Error('Expected error'); },
+      (error) => { expect(error.type).toBe('validation_error'); },
+    );
   });
 });
 
 describe('todosApi.delete', () => {
-  it('resolves void on success', async () => {
+  it('returns ok on success', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true });
 
-    await expect(todosApi.delete('1')).resolves.toBeUndefined();
+    const result = await todosApi.delete('1');
+
+    expect(result.isOk()).toBe(true);
   });
 
-  it('throws when server returns error', async () => {
+  it('returns network_error when server returns error', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 404,
       json: async () => ({ error: 'Todo 1 not found' }),
     });
 
-    await expect(todosApi.delete('1')).rejects.toThrow('Todo 1 not found');
+    const result = await todosApi.delete('1');
+
+    result.match(
+      () => { throw new Error('Expected error'); },
+      (error) => {
+        expect(error.type).toBe('network_error');
+        if (error.type === 'network_error') {
+          expect(error.message).toBe('Todo 1 not found');
+        }
+      },
+    );
   });
 });

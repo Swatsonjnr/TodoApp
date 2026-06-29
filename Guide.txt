@@ -2,3 +2,7 @@ Fixed all import by using the alias instead "../'
 handle the validation for request and not just the response
 // absolute import only no "../../"
 // remove the promise.resolve wrapper from all since they already return a promise
+// use validation from the contract to validate the data for all routes(in "todos.route")
+//have a client.ts file or config file to have all interactions wiht the .env
+//  // filtering should come from the backend for authenticity rather than having it being done on the frontend
+  // have all 

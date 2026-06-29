@@ -6,8 +6,8 @@ import type { TodoServiceError } from './todos.errors.js';
 export class TodosService {
   constructor(private readonly repository: TodosRepository) {}
 
-  listTodos(): ResultAsync<{ todos: TodoResponse[]; total: number }, TodoServiceError> {
-    return this.repository.findAll().map((todos) => ({
+  listTodos(filter?: { status?: 'pending' | 'completed' }): ResultAsync<{ todos: TodoResponse[]; total: number }, TodoServiceError> {
+    return this.repository.findAll(filter).map((todos) => ({
       todos,
       total: todos.length,
     }));

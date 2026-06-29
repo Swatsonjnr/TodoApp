@@ -9,7 +9,7 @@ import { useTodosStatus } from './todo.hooks';
 
 vi.mock('../todos.api');
 
-const mockTodo = {
+const mockPendingTodo = {
   id: '1',
   title: 'Test todo',
   description: null,
@@ -43,10 +43,13 @@ describe('useTodosStatus', () => {
     expect(result.current.status).toBe('loading');
   });
 
-  it('returns success status with todos when fetch succeeds', async () => {
-    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(
-      ok({ todos: [mockTodo], total: 1 }) as never,
-    );
+  it('returns success status with pending and completed todos when fetch succeeds', async () => {
+    vi.spyOn(todosApiModule.todosApi, 'getAll').mockImplementation((query) => {
+      if (query?.status === 'pending') {
+        return ok({ todos: [mockPendingTodo], total: 1 }) as never;
+      }
+      return ok({ todos: [], total: 0 }) as never;
+    });
 
     const { result } = renderHook(() => useTodosStatus(), {
       wrapper: makeWrapper(),
@@ -55,8 +58,10 @@ describe('useTodosStatus', () => {
     await waitFor(() => expect(result.current.status).toBe('success'));
 
     if (result.current.status === 'success') {
-      expect(result.current.todos).toHaveLength(1);
-      expect(result.current.todos[0].title).toBe('Test todo');
+      expect(result.current.pending).toHaveLength(1);
+      expect(result.current.pending[0].title).toBe('Test todo');
+      expect(result.current.completed).toHaveLength(0);
+      expect(result.current.total).toBe(1);
     }
   });
 

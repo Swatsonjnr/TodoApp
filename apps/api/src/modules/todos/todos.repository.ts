@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { fromPromise, ok, err } from 'neverthrow';
 import { z } from 'zod';
 import { TodoStatusSchema } from '@todo-app/contracts/todos';
@@ -19,19 +19,24 @@ type ServiceUnavailable = { type: 'service_unavailable' };
 export class TodosRepository {
   constructor(private readonly db: Db) {}
 
-  findAll() {
+  findAll(filter?: { status?: 'pending' | 'completed' }) {
+    const query = this.db
+      .select({
+        id: todos.id,
+        title: todos.title,
+        description: todos.description,
+        status: todos.status,
+        createdAt: todos.createdAt,
+        updatedAt: todos.updatedAt,
+      })
+      .from(todos);
+
+    if (filter?.status) {
+      query.where(eq(todos.status, filter.status));
+    }
+
     return fromPromise(
-      this.db
-        .select({
-          id: todos.id,
-          title: todos.title,
-          description: todos.description,
-          status: todos.status,
-          createdAt: todos.createdAt,
-          updatedAt: todos.updatedAt,
-        })
-        .from(todos)
-        .all(),
+      query.all(),
       (): ServiceUnavailable => ({ type: 'service_unavailable' }),
     ).map((rows) => DbTodoSchema.array().parse(rows));
   }

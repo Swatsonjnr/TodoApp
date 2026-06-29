@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import {
   CreateTodoRequestSchema,
   TodoResponseSchema,
@@ -24,8 +25,13 @@ function mapTodoError(error: TodoServiceError, id?: string) {
 
 export async function todosRoute(app: FastifyInstance, { service }: { service: TodosService }) {
   // get all
-  app.get('/', async (_req, reply) => {
-    const result = await service.listTodos();
+  app.get('/', async (req, reply) => {
+    const { status } = req.query as { status?: string };
+    const parsed = z.enum(['pending', 'completed']).optional().safeParse(status);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Invalid status filter' });
+    }
+    const result = await service.listTodos({ status: parsed.data });
     result.match(
       (data) => reply.status(200).send(data),
       () => reply.status(503).send({ error: 'Service unavailable' }),

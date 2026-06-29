@@ -4,15 +4,26 @@ import {
   TodoListResponseSchema,
   TodoResponseSchema,
 } from '@todo-app/contracts';
-import type { CreateTodoRequest, UpdateTodoRequest, TodoResponse, TodoListResponse } from '@todo-app/contracts';
+import type {
+  CreateTodoRequest,
+  UpdateTodoRequest,
+  TodoResponse,
+  TodoListResponse,
+  TodoListQuery,
+} from '@todo-app/contracts';
 import type { ResultAsync } from 'neverthrow';
 import { errAsync } from 'neverthrow';
 import { client } from '@/lib/client';
 import type { ApiError } from '@/lib/client';
 
 export const todosApi = {
-  getAll: (): ResultAsync<TodoListResponse, ApiError> =>
-    client.get('/todos', TodoListResponseSchema),
+  getAll: (query?: TodoListQuery): ResultAsync<TodoListResponse, ApiError> => {
+    const params: Record<string, string> = {};
+    if (query?.status) {
+      params['status'] = query.status;
+    }
+    return client.get('/todos', TodoListResponseSchema, params);
+  },
 
   getById: (id: string): ResultAsync<TodoResponse, ApiError> =>
     client.get(`/todos/${id}`, TodoResponseSchema),
@@ -39,6 +50,5 @@ export const todosApi = {
     return client.patch(`/todos/${id}`, parsed.data, TodoResponseSchema);
   },
 
-  delete: (id: string): ResultAsync<void, ApiError> =>
-    client.del(`/todos/${id}`),
+  delete: (id: string): ResultAsync<void, ApiError> => client.del(`/todos/${id}`),
 };

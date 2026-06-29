@@ -4,43 +4,50 @@ import { todosApi } from '../todos.api';
 
 export const todoKeys = {
   all: ['todos'] as const,
+  filtered: (status?: 'pending' | 'completed') => ['todos', { status }] as const,
   detail: (id: string) => ['todos', id] as const,
 };
 
-type TodosStatus =
-  | { status: 'loading' }
-  | { status: 'success'; todos: TodoResponse[]; total: number }
-  | { status: 'error'; message: string };
-
-export function useTodos() {
+export function useTodos(filter?: { status?: 'pending' | 'completed' }) {
   return useQuery({
-    queryKey: todoKeys.all,
+    queryKey: todoKeys.filtered(filter?.status),
     queryFn: () =>
-      todosApi.getAll().match(
+      todosApi.getAll(filter).match(
         (data) => data,
         (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
       ),
   });
 }
 
-export function useTodosStatus(): TodosStatus {
-  const query = useTodos();
+type TodosStatus =
+  | { status: 'loading' }
+  | { status: 'success'; pending: TodoResponse[]; completed: TodoResponse[]; total: number }
+  | { status: 'error'; message: string };
 
-  if (query.isLoading) {
+export function useTodosStatus(): TodosStatus {
+  const pendingQuery = useTodos({ status: 'pending' });
+  const completedQuery = useTodos({ status: 'completed' });
+
+  if (pendingQuery.isLoading || completedQuery.isLoading) {
     return { status: 'loading' };
   }
 
-  if (query.isError) {
+  if (pendingQuery.isError || completedQuery.isError) {
+    const error = pendingQuery.error ?? completedQuery.error;
     return {
       status: 'error',
-      message: query.error instanceof Error ? query.error.message : 'Unknown error',
+      message: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 
+  const pending = pendingQuery.data?.todos ?? [];
+  const completed = completedQuery.data?.todos ?? [];
+
   return {
     status: 'success',
-    todos: query.data?.todos ?? [],
-    total: query.data?.total ?? 0,
+    pending,
+    completed,
+    total: pending.length + completed.length,
   };
 }
 

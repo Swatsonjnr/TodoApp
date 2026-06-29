@@ -1,30 +1,10 @@
 import { useState } from 'react';
-import type { TodoResponse, CreateTodoRequest } from '@todo-app/contracts';
+import type { CreateTodoRequest } from '@todo-app/contracts';
 import { useTodosStatus, useCreateTodo, useUpdateTodo, useDeleteTodo } from '../hooks/todo.hooks';
 import { TodosView } from '../views/TodosView';
 
-type FlowState =
-  | { status: 'loading' }
-  | { status: 'error'; message: string }
-  | { status: 'success'; pending: TodoResponse[]; completed: TodoResponse[]; isEmpty: boolean };
-
-function useFlow(): FlowState {
-  const todosStatus = useTodosStatus();
-
-  if (todosStatus.status === 'loading') {return { status: 'loading' }};
-  if (todosStatus.status === 'error') {return { status: 'error', message: todosStatus.message }};
-
-  // filtering should come from the backend for authenticity rather than having it being done on the frontend
-  // have all 
-  const pending = todosStatus.todos.filter((t) => t.status === 'pending');
-  const completed = todosStatus.todos.filter((t) => t.status === 'completed');
-
-
-  return { status: 'success', pending, completed, isEmpty: todosStatus.todos.length === 0 };
-}
-
 export function TodosFlow() {
-  const flow = useFlow();
+  const todosStatus = useTodosStatus();
   const createTodo = useCreateTodo();
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
@@ -36,13 +16,12 @@ export function TodosFlow() {
     createTodo.mutate(data);
   }
 
-  // toggling should come from the backend for authenticity rather than having it being done on the frontend
   function handleToggle(id: string) {
-    const todo =
-      flow.status === 'success'
-        ? [...flow.pending, ...flow.completed].find((t) => t.id === id)
-        : undefined;
+    if (todosStatus.status !== 'success') {
+      return;
+    }
 
+    const todo = [...todosStatus.pending, ...todosStatus.completed].find((t) => t.id === id);
     if (!todo) {
       return;
     }
@@ -59,17 +38,19 @@ export function TodosFlow() {
     deleteTodo.mutate(id, { onSettled: () => setDeletingId(null) });
   }
 
-  const listStatus = flow.status;
-  const listError = flow.status === 'error' ? flow.message : undefined;
-  const pending = flow.status === 'success' ? flow.pending : [];
-  const completed = flow.status === 'success' ? flow.completed : [];
-  const isEmpty = flow.status === 'success' ? flow.isEmpty : true;
+  const listStatus = todosStatus.status;
+  const listError = todosStatus.status === 'error' ? todosStatus.message : undefined;
+  const pending = todosStatus.status === 'success' ? todosStatus.pending : [];
+  const completed = todosStatus.status === 'success' ? todosStatus.completed : [];
+  const isEmpty = todosStatus.status === 'success' ? todosStatus.total === 0 : true;
 
   return (
     <TodosView
       onSubmit={handleSubmit}
       isSubmitting={createTodo.isPending}
-      submitError={createTodo.isError ? (createTodo.error?.message ?? 'Failed to create todo') : null}
+      submitError={
+        createTodo.isError ? (createTodo.error?.message ?? 'Failed to create todo') : null
+      }
       listStatus={listStatus}
       listError={listError}
       pending={pending}

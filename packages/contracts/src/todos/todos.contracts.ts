@@ -27,7 +27,12 @@ export const TodoListResponseSchema = z.object({
   total: z.number(),
 });
 
+export const TodoListQuerySchema = z.object({
+  status: TodoStatusSchema.optional(),
+});
+
 export type TodoStatus = z.infer<typeof TodoStatusSchema>;
+export type TodoListQuery = z.infer<typeof TodoListQuerySchema>;
 export type CreateTodoRequest = z.infer<typeof CreateTodoRequestSchema>;
 export type UpdateTodoRequest = z.infer<typeof UpdateTodoRequestSchema>;
 export type TodoResponse = z.infer<typeof TodoResponseSchema>;

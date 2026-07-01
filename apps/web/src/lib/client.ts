@@ -11,10 +11,6 @@ export type ApiError =
 // const BASE_URL = import.meta.env['VITE_API_URL'] as string;
 const BASE_URL = z.string().url().parse(import.meta.env['VITE_API_URL']);
 
-if (!BASE_URL) {
-  throw new Error('VITE_API_URL is not set. Check your .env file.');
-}
-
 async function parseResponse<T>(
   res: Response,
   schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } },

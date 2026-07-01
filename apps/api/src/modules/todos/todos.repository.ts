@@ -1,4 +1,4 @@
-import { eq} from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { fromPromise, ok, err } from 'neverthrow';
 import { z } from 'zod';
 import { TodoStatusSchema } from '@todo-app/contracts/todos';
@@ -20,20 +20,28 @@ export class TodosRepository {
   constructor(private readonly db: Db) {}
 
   findAll(filter?: { status?: 'pending' | 'completed' }) {
-    const query = this.db
-      .select({
-        id: todos.id,
-        title: todos.title,
-        description: todos.description,
-        status: todos.status,
-        createdAt: todos.createdAt,
-        updatedAt: todos.updatedAt,
-      })
-      .from(todos);
-
-    if (filter?.status) {
-      query.where(eq(todos.status, filter.status));
-    }
+    const query = filter?.status
+      ? this.db
+          .select({
+            id: todos.id,
+            title: todos.title,
+            description: todos.description,
+            status: todos.status,
+            createdAt: todos.createdAt,
+            updatedAt: todos.updatedAt,
+          })
+          .from(todos)
+          .where(eq(todos.status, filter.status))
+      : this.db
+          .select({
+            id: todos.id,
+            title: todos.title,
+            description: todos.description,
+            status: todos.status,
+            createdAt: todos.createdAt,
+            updatedAt: todos.updatedAt,
+          })
+          .from(todos);
 
     return fromPromise(
       query.all(),

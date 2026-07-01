@@ -7,7 +7,7 @@ import {
 } from '@todo-app/contracts/todos';
 import type { TodosService } from './todos.service.js';
 import type { TodoServiceError } from './todos.errors.js';
-// use validation from the contract to validate the data for all routes
+// use validation from the contract to validate the data for all routes and the statuses too
 
 function mapTodoError(error: TodoServiceError, id?: string) {
   switch (error.type) {

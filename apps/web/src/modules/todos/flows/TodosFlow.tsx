@@ -5,12 +5,17 @@ import { TodosView } from '../views/TodosView';
 
 export function TodosFlow() {
   const todosStatus = useTodosStatus();
+
   const createTodo = useCreateTodo();
+
   const updateTodo = useUpdateTodo();
+
   const deleteTodo = useDeleteTodo();
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
 
   function handleSubmit(data: CreateTodoRequest) {
     createTodo.mutate(data);
@@ -44,6 +49,7 @@ export function TodosFlow() {
   const completed = todosStatus.status === 'success' ? todosStatus.completed : [];
   const isEmpty = todosStatus.status === 'success' ? todosStatus.total === 0 : true;
 
+// console.log(todosStatus)
   return (
     <TodosView
       onSubmit={handleSubmit}

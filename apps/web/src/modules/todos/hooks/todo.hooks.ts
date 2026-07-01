@@ -1,18 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CreateTodoRequest, UpdateTodoRequest, TodoResponse } from '@todo-app/contracts';
 import { todosApi } from '../todos.api';
-
+// fetch all todos and have 
 export const todoKeys = {
   all: ['todos'] as const,
-  filtered: (status?: 'pending' | 'completed') => ['todos', { status }] as const,
   detail: (id: string) => ['todos', id] as const,
 };
 
-export function useTodos(filter?: { status?: 'pending' | 'completed' }) {
+export function useTodos() {
   return useQuery({
-    queryKey: todoKeys.filtered(filter?.status),
+    queryKey: todoKeys.all,
     queryFn: () =>
-      todosApi.getAll(filter).match(
+      todosApi.getAll().match(
         (data) => data,
         (error) => { throw new Error(error.type === 'network_error' ? error.message : 'Invalid response'); },
       ),
@@ -25,29 +24,28 @@ type TodosStatus =
   | { status: 'error'; message: string };
 
 export function useTodosStatus(): TodosStatus {
-  const pendingQuery = useTodos({ status: 'pending' });
-  const completedQuery = useTodos({ status: 'completed' });
+  const query = useTodos();
 
-  if (pendingQuery.isLoading || completedQuery.isLoading) {
+  if (query.isLoading) {
     return { status: 'loading' };
   }
 
-  if (pendingQuery.isError || completedQuery.isError) {
-    const error = pendingQuery.error ?? completedQuery.error;
+  if (query.isError) {
     return {
       status: 'error',
-      message: error instanceof Error ? error.message : 'Unknown error',
+      message: query.error instanceof Error ? query.error.message : 'Unknown error',
     };
   }
 
-  const pending = pendingQuery.data?.todos ?? [];
-  const completed = completedQuery.data?.todos ?? [];
+  const all = query.data?.todos ?? [];
+  const pending = all.filter((t) => t.status === 'pending');
+  const completed = all.filter((t) => t.status === 'completed');
 
   return {
     status: 'success',
     pending,
     completed,
-    total: pending.length + completed.length,
+    total: all.length,
   };
 }
 

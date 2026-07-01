@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq} from 'drizzle-orm';
 import { fromPromise, ok, err } from 'neverthrow';
 import { z } from 'zod';
 import { TodoStatusSchema } from '@todo-app/contracts/todos';

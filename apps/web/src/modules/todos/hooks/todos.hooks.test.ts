@@ -44,12 +44,9 @@ describe('useTodosStatus', () => {
   });
 
   it('returns success status with pending and completed todos when fetch succeeds', async () => {
-    vi.spyOn(todosApiModule.todosApi, 'getAll').mockImplementation((query) => {
-      if (query?.status === 'pending') {
-        return ok({ todos: [mockPendingTodo], total: 1 }) as never;
-      }
-      return ok({ todos: [], total: 0 }) as never;
-    });
+    vi.spyOn(todosApiModule.todosApi, 'getAll').mockReturnValue(
+      ok({ todos: [mockPendingTodo], total: 1 }) as never,
+    );
 
     const { result } = renderHook(() => useTodosStatus(), {
       wrapper: makeWrapper(),

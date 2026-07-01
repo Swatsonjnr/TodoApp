@@ -1,12 +1,19 @@
 import { fromPromise } from 'neverthrow';
 import type { ResultAsync } from 'neverthrow';
+import z from 'zod';
+// validate the base url
 
 export type ApiError =
   | { type: 'network_error'; message: string }
   | { type: 'invalid_response' }
   | { type: 'validation_error'; messages: string[] };
 
-const BASE_URL = import.meta.env['VITE_API_URL'] as string;
+// const BASE_URL = import.meta.env['VITE_API_URL'] as string;
+const BASE_URL = z.string().url().parse(import.meta.env['VITE_API_URL']);
+
+if (!BASE_URL) {
+  throw new Error('VITE_API_URL is not set. Check your .env file.');
+}
 
 async function parseResponse<T>(
   res: Response,
@@ -26,6 +33,12 @@ async function parseResponse<T>(
 }
 
 function toApiError(e: unknown): ApiError {
+  if (e instanceof Error && e.message === 'Failed to fetch') {
+    return {
+      type: 'network_error',
+      message: 'Cannot reach the server. Check your connection or API URL.',
+    };
+  }
   if (e instanceof Error && e.message === 'invalid_response') {
     return { type: 'invalid_response' };
   }
